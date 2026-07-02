@@ -7,30 +7,18 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Copy Website to Linux Server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          source: "index.html,style.css"
-          target: "/tmp/website"
+      - name: Deploy Website
+        run: |
+          sudo cp index.html /var/www/html/
+          sudo cp style.css /var/www/html/
+          sudo systemctl restart apache2
 
-      - name: Deploy to Apache
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            sudo mkdir -p /var/www/html
-            sudo cp /tmp/website/index.html /var/www/html/
-            sudo cp /tmp/website/style.css /var/www/html/
-            sudo chown -R www-data:www-data /var/www/html
-            sudo systemctl restart apache2
+      - name: Verify Deployment
+        run: |
+          ls -l /var/www/html/
